@@ -9,6 +9,7 @@ import Rank from './components/Rank/Rank';
 import ParticlesBg from "particles-bg"
 import FaceRecognition from './components/FaceRecognition/FaceRecognition';
 import Signin from './components/Signin/Signin';
+import Register from './components/Register/Register';
 
 function App() {
     
@@ -16,6 +17,20 @@ function App() {
     const onInputChange = (event) => {
         setInput({input: event.target.value});
     }
+
+    const [route, setRoute] = useState('signin')
+    const onRouteChange = (route) => {
+        if (route === 'signout') {
+            setisSignedIn(false)
+        } else if (route === 'home') {
+            setisSignedIn(true)
+        }
+        setRoute(route);
+    }
+
+    const [isSignedIn, setisSignedIn] = useState(false)
+    
+
     const MODEL_ID = 'face-detection';
     const returnClarifaiRequestOptions = (imageUrl) => {
         const PAT = '37735c1bffb3434b82929784e60ded0a';
@@ -83,14 +98,22 @@ function App() {
     return (
         <div className="App">
             <ParticlesBg type="cobweb" bg={true} />
-            <Navigation />
-            <Logo />
-            <Signin />
-            <Rank />
-            <ImageLinkForm 
-            onInputChange={onInputChange} 
-            onButtonSubmit={onButtonSubmit}/>
-            <FaceRecognition />
+            <Navigation isSignedIn={isSignedIn} onRouteChange={onRouteChange}/>
+            { route === "home"
+                ?   <div>
+                        <Logo />
+                        <Rank />
+                        <ImageLinkForm
+                            onInputChange={onInputChange}
+                            onButtonSubmit={onButtonSubmit} />
+                            {/*<FaceRecognition />*/}
+                    </div>
+                : (
+                    route === "signin"
+                    ? <Signin onRouteChange={onRouteChange}/>
+                    : <Register onRouteChange={onRouteChange}/>
+                )       
+            }              
         </div>
 
     );
