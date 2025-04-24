@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 import Navigation from './components/Navigation/Navigation';
 import Logo from './components/Logo/Logo';
@@ -15,7 +13,12 @@ function App() {
     
     const [input, setInput] = useState('')
     const onInputChange = (event) => {
-        setInput({input: event.target.value});
+        setInput(event.target.value);
+    }
+
+    const [imageUrl, setImageUrl] = useState('')
+    const onImageUrlChange = (event) => {
+        setImageUrl(event.target.value);
     }
 
     const [route, setRoute] = useState('signin')
@@ -30,70 +33,84 @@ function App() {
 
     const [isSignedIn, setisSignedIn] = useState(false)
     
+    const [data, setData] = useState(null);
+    useEffect(() => {
+        fetch("http://localhost:3000/")
+        .then(res => res.json())
+        .then(setData);
+    }, []);
 
-    const MODEL_ID = 'face-detection';
-    const returnClarifaiRequestOptions = (imageUrl) => {
-        const PAT = '37735c1bffb3434b82929784e60ded0a';
-        const USER_ID = 'donovandomaoan';
-        const APP_ID = 'face-recognize';
-        const MODEL_ID = 'face-detection';
-        const IMAGE_URL = imageUrl;
-        
-        const raw = JSON.stringify({
-            "user_app_id": {
-                "user_id": USER_ID,
-                "app_id": APP_ID
-            },
-            "inputs": [
-                {
-                    "data": {
-                        "image": {
-                            "url": IMAGE_URL
-                            // "base64": IMAGE_BYTES_STRING
-                        }
-                    }
-                }
-            ]
+    const [loadUser, setLoadUser] = useState({
+        id: '',
+        name: '',
+        email: '',
+        entries: 0,
+        joined: ''
+    })
+    const onLoadUser = (data) => {
+        setLoadUser({
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            entries: data.entries,
+            joined: data.joined
         });
-    
-        return requestOptions = {
-          method: 'post',
-          headers: {
-              'Accept': 'application/json',
-              'Authorization': 'Key ' + PAT
-          },
-          body: raw
-        };
-      }
+    }
 
-    const onButtonSubmit = () => {
-        fetch("https://api.clarifai.com/v2/models/" + MODEL_ID + "/outputs", returnClarifaiRequestOptions)
-      .then(response => response.json())
-      .then(result => {
+    const [boxes, setBoxes] = useState([]);
+    const calculateFaceLocation = (data) => {
+        const image = document.getElementById('inputimage');
+        const width = Number(image.width);
+        const height = Number(image.height);
+        
+        return data.outputs[0].data.regions.map(region => {
+            const box = region.region_info.bounding_box;
+            return {
+                leftCol: box.left_col * width,
+                topRow: box.top_row * height,
+                rightCol: width - (box.right_col * width),
+                bottomRow: height - (box.bottom_row * height)
+            }
+        });
+    };
 
-          const regions = result.outputs[0].data.regions;
+    const[errorMessage, setErrorMessage] = useState('');
 
-          regions.forEach(region => {
-              // Accessing and rounding the bounding box values
-              const boundingBox = region.region_info.bounding_box;
-              const topRow = boundingBox.top_row.toFixed(3);
-              const leftCol = boundingBox.left_col.toFixed(3);
-              const bottomRow = boundingBox.bottom_row.toFixed(3);
-              const rightCol = boundingBox.right_col.toFixed(3);
+    const onPictureSubmit = () => {
+        if (!input) return;
 
-              region.data.concepts.forEach(concept => {
-                  // Accessing and rounding the concept value
-                  const name = concept.name;
-                  const value = concept.value.toFixed(4);
+        setImageUrl(input);
+        setErrorMessage('');
 
-                  console.log(`${name}: ${value} BBox: ${topRow}, ${leftCol}, ${bottomRow}, ${rightCol}`);
-                  
-              });
-          });
+        fetch('http://localhost:3000/imageurl', {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ input })
+        })
+            .then(response => response.json())
+            .then(response => {
+                if (response && response.outputs && response.outputs[0].data.regions) {
+                    fetch('http://localhost:3000/image', {
+                        method: 'put',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: loadUser.id })
+                    })
+                        .then(res => res.json())
+                        .then(count => {
+                            setLoadUser(prevUser => ({ ...prevUser, entries: count }));
+                        })
+                        .catch(console.log);
 
-      })
-      .catch(error => console.log('error', error));
-        }
+                    setBoxes(calculateFaceLocation(response));
+                } else {
+                    setErrorMessage('No faces detected. Please try another image.');
+                }
+            })
+            .catch(err => { 
+                console.log('error:', err);
+                setErrorMessage("Error processing image. Please try again later.");
+            });
+    };
     
     return (
         <div className="App">
@@ -102,20 +119,25 @@ function App() {
             { route === "home"
                 ?   <div>
                         <Logo />
-                        <Rank />
+                        <Rank 
+                            name={loadUser.name}
+                            entries={loadUser.entries}/>
                         <ImageLinkForm
+                            input={input}
                             onInputChange={onInputChange}
-                            onButtonSubmit={onButtonSubmit} />
-                            {/*<FaceRecognition />*/}
+                            onPictureSubmit={onPictureSubmit} />
+                            {errorMessage && <p className="error-message">{errorMessage}</p>}
+                        <FaceRecognition 
+                            imageUrl={imageUrl}
+                            boxes={boxes}/>
                     </div>
                 : (
                     route === "signin"
-                    ? <Signin onRouteChange={onRouteChange}/>
-                    : <Register onRouteChange={onRouteChange}/>
+                    ? <Signin loadUser={onLoadUser} onRouteChange={onRouteChange}/>
+                    : <Register loadUser={onLoadUser} onRouteChange={onRouteChange}/>
                 )       
             }              
         </div>
-
     );
 }
 
