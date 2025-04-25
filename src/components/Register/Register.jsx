@@ -47,7 +47,6 @@ function Register({ onRouteChange, loadUser }) {
         })
         .catch(err => {
             console.error('Error during registration:', err.message);
-            alert('Registration failed. Please try again later.');
         });
     };
     
