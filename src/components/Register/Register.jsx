@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect }  from 'react';
+import { useState, }  from 'react';
 
 
 function Register({ onRouteChange, loadUser }) {
@@ -21,7 +21,7 @@ function Register({ onRouteChange, loadUser }) {
 
     const onSubmitRegister = () => {
         console.log('Sending registration data...');
-        fetch('https://cogniface.onrender.com/register', {
+        fetch('https://cogniface-backend.onrender.com/register', {
             method: 'post',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
