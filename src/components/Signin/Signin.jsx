@@ -14,7 +14,7 @@ function Signin({ onRouteChange, loadUser }) {
     }
 
     const onSubmitSignIn = () => {
-        fetch('https://cogniface.onrender.com/signin', {
+        fetch('https://cogniface-backend.onrender.com/signin', {
             method: 'post',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
