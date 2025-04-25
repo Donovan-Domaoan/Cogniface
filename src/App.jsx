@@ -35,7 +35,7 @@ function App() {
     
     const [data, setData] = useState(null);
     useEffect(() => {
-        fetch("https://cogniface.onrender.com/")
+        fetch("https://cogniface-backend.onrender.com/")
         .then(res => res.json())
         .then(setData);
     }, []);
@@ -82,7 +82,7 @@ function App() {
         setImageUrl(input);
         setErrorMessage('');
 
-        fetch('https://cogniface.onrender.com/imageurl', {
+        fetch('https://cogniface-backend.onrender.com/imageurl', {
             method: 'post',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ input })
@@ -90,7 +90,7 @@ function App() {
             .then(response => response.json())
             .then(response => {
                 if (response && response.outputs && response.outputs[0].data.regions) {
-                    fetch('https://cogniface.onrender.com/image', {
+                    fetch('https://cogniface-backend.onrender.com/image', {
                         method: 'put',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ id: loadUser.id })
