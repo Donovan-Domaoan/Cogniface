@@ -20,6 +20,7 @@ function Register({ onRouteChange, loadUser }) {
         }
 
     const onSubmitRegister = () => {
+        console.log('Sending registration data...');
         fetch('https://cogniface.onrender.com/register', {
             method: 'post',
             headers: {'Content-Type': 'application/json'},
@@ -29,14 +30,26 @@ function Register({ onRouteChange, loadUser }) {
                 name: nameRegister
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to register: ' + response.statusText);
+            }
+            return response.json();
+        })
         .then(user => {
-            if(user.id) {
-                loadUser(user);
+            if (user && user.id) {
+                console.log('User registered:', user);
+                loadUser(user);  
                 onRouteChange('home');
+            } else {
+                throw new Error('No user ID found in the response.');
             }
         })
-    }
+        .catch(err => {
+            console.error('Error during registration:', err.message);
+            alert('Registration failed. Please try again later.');
+        });
+    };
     
     return (
         <article className="br3 ba b--black-10 mv4 w-100 w-50-m w-25-l mw6 shadow-5 center">
