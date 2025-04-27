@@ -5,7 +5,7 @@ const ImageLinkForm = ({ input, onInputChange, onPictureSubmit }) => {
     return (
         <div>
             <p className="f3 tc">
-                {"Drop a photo and let Cogniface show you who's in it."}
+                {"Paste a direct .jpg or .png link — not a full webpage — and we'll find the face!"}
             </p>
             <div className="center">
                 <div className="form center pa4 br3 w-30 shadow-5">
